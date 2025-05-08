@@ -28,6 +28,7 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      "react/react-props":"off"
     },
   },
 ]

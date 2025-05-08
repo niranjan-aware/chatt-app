@@ -3,10 +3,14 @@ const app = express();
 import dotenv from 'dotenv';
 import cors from 'cors';
 import authRoutes from './src/routes/auth.routes.js'
+import messageRoutes from './src/routes/message.route.js'
 import {connectDB} from './src/config/db.js' 
 import cookieParser from 'cookie-parser';
 
-app.use(cors());
+app.use(cors({
+    origin:"http://localhost:5173",
+    credentials:true
+}));
 app.use(cookieParser());
 
 dotenv.config(); // Load environment variables from .env file
@@ -17,6 +21,7 @@ app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-enco
 const PORT = process.env.PORT || 3000;
 
 app.use('/api/auth',authRoutes);
+app.use('/api/message',messageRoutes);
 
 app.listen(PORT,() =>{
     connectDB();
