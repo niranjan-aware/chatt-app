@@ -58,11 +58,15 @@ export const login = async(req,res)=>{
         }
 
        const token = generateToken(user._id, res);
+       
        const newUser = {
-        id:user._id,
-        username:user.username,
-        profilePic:user.profilePic
-       }
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic,
+        createdAt: user.createdAt,
+      };
+       
 
         return res.status(201).json({ success: true, user:newUser, token });
 
@@ -84,18 +88,20 @@ export const logout = (req,res)=>{
 }
 
 export const updateProfile = async(req, res)=>{
-    
     try {
-        const {profilePic} = req.body;
-        const {userId}    = req.user._id;
+        const {profilePic, userId} = req.body;
         if(!profilePic){
             return res.status(400).json({success:true, message:"Upload the profile pic"});
         }
+        
         const uploadResponse = await cloudinary.uploader.upload(profilePic);
+        console.log(uploadResponse);
+        
         const updatedUser = await User.findByIdAndUpdate(userId,{profilePic:uploadResponse.secure_url},{new:true});
         res.status(200).json({success:true,updatedUser});
     } catch (error) {
-        
+        console.error("Error in update profile controller", error.message);
+        res.status(500).json({success:false,message:"Error in update profile controller"});
     }
 }
 

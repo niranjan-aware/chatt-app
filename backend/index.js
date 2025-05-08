@@ -15,8 +15,8 @@ app.use(cookieParser());
 
 dotenv.config(); // Load environment variables from .env file
 
-app.use(express.json()); // Middleware to parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Middleware to parse URL-encoded request bodies
+app.use(express.json({ limit: '10mb' })); // Middleware to parse JSON request bodies
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // Middleware to parse URL-encoded request bodies
 
 const PORT = process.env.PORT || 3000;
 
