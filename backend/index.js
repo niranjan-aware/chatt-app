@@ -1,11 +1,11 @@
 import express from 'express';
-const app = express();
 import dotenv from 'dotenv';
 import cors from 'cors';
 import authRoutes from './src/routes/auth.routes.js'
 import messageRoutes from './src/routes/message.route.js'
 import {connectDB} from './src/config/db.js' 
 import cookieParser from 'cookie-parser';
+import {io, app, server} from './src/lib/socketIo.js'
 
 app.use(cors({
     origin:"http://localhost:5173",
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true })); // Middleware to
 const PORT = process.env.PORT || 3000;
 
 app.use('/api/auth',authRoutes);
-app.use('/api/message',messageRoutes);
+app.use('/api/messages',messageRoutes);
 
 app.listen(PORT,() =>{
     connectDB();

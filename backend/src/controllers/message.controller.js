@@ -4,7 +4,7 @@ import cloudinary from "../lib/cloudinary.js";
 
 export const getUsersForSideBar = async(req, res)=>{
     try {
-        const loggedInUser = req.user._id;
+        const loggedInUser = req.user.id;
         const users = await User.find({_id:{$ne:loggedInUser}}).select("-password");
         res.status(200).json({success:true, message:"Users List", users});
     } catch (error) {
@@ -33,8 +33,10 @@ export const getMessages = async(req, res)=>{
 export const sendMessage = async(req, res)=>{
     try {
         const {text, image} = req.body;
+        
         const {id:receiverId} = req.params;
-        const senderId = res.user._id;
+        
+        const senderId = req.user.id;
         let imageUrl;
         if(image){
             const uploadResponse = cloudinary.uploader.upload(image);
