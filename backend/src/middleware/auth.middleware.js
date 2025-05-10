@@ -25,7 +25,7 @@ export const protectRoute = async(req, res, next)=>{
             username:user.username,
             email:user.email,
             profilePic:user.profilePic,
-            createAt:user.createAt
+            createdAt:user.createdAt
         }
         next();
 
