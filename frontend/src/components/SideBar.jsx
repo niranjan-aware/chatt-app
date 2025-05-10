@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SideBarSkeleton from "./skeletons/SideBarSkeleton";
@@ -13,6 +13,7 @@ export default function SideBar() {
     getUsers();
   },[getUsers]);
 
+  
   const filteredUsers = showOnlineOnly
   ? (users || []).filter((user) => (onlineUsers || []).includes(user._id))
   : (users || []);
@@ -46,7 +47,7 @@ export default function SideBar() {
       <div className="overflow-y-auto w-full py-3">
         {filteredUsers.map((user) => (
           <button
-            key={user.id}
+            key={user._id}
             onClick={() => setSelectedUser(user)}
             className={`
               w-full p-3 flex items-center gap-3
@@ -60,10 +61,10 @@ export default function SideBar() {
                 alt={user.name}
                 className="size-12 object-cover rounded-full"
               />
-              {onlineUsers.includes(user.id) && (
+              {onlineUsers.includes(user._id) && (
                 <span
                   className="absolute bottom-0 right-0 size-3 bg-green-500 
-                  rounded-full ring-2 ring-zinc-900"
+                  rounded-full ring-[1px] ring-zinc-400"
                 />
               )}
             </div>

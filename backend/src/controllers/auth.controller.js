@@ -67,6 +67,8 @@ export const login = async(req,res)=>{
         createdAt: user.createdAt,
       };
        
+      console.log(newUser);
+      
 
         return res.status(201).json({ success: true, user:newUser, token });
 

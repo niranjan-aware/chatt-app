@@ -11,11 +11,32 @@ const io = new Server(server,{
     },
 });
 
-io.on("conncetion",(socket)=>{
+export function getReceiverSocketId(userId){
+    return userSocketMap[userId];
+}
+
+//used to store online users
+
+const userSocketMap = {}; // userId, socketId
+
+io.on("connection",(socket)=>{
     console.log("A user is connected", socket.id);
+
+    const userId = socket.handshake.query.userId;
+    if(userId){
+        socket.userId = userId;
+        userSocketMap[userId] = socket.id;
+    }
+
+    io.emit("getOnlineUsers",Object.keys(userSocketMap));
 
     socket.on("disconnect",()=>{
         console.log("A user is disconnected", socket.id);
+        if (socket.userId) {
+            delete userSocketMap[socket.userId];
+            io.emit("getOnlineUsers", Object.keys(userSocketMap));
+        }
+        
     })
 });
 
