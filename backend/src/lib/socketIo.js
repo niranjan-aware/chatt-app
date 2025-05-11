@@ -21,13 +21,14 @@ const userSocketMap = {}; // userId, socketId
 
 io.on("connection",(socket)=>{
     console.log("A user is connected", socket.id);
-
     const userId = socket.handshake.query.userId;
+    console.log(userId);
+    
     if(userId){
         socket.userId = userId;
         userSocketMap[userId] = socket.id;
     }
-
+    console.log("Broadcasting online users:", Object.keys(userSocketMap));
     io.emit("getOnlineUsers",Object.keys(userSocketMap));
 
     socket.on("disconnect",()=>{

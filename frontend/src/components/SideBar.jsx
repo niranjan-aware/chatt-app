@@ -11,11 +11,13 @@ export default function SideBar() {
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   useEffect(()=>{
     getUsers();
-  },[getUsers]);
+  },[getUsers,onlineUsers]);
+  console.log(onlineUsers,users);
+  
 
   
   const filteredUsers = showOnlineOnly
-  ? (users || []).filter((user) => (onlineUsers || []).includes(user._id))
+  ? (users || []).filter((user) => (onlineUsers || []).includes(String(user._id)))
   : (users || []);
 
   if(isUsersLoading){
@@ -52,7 +54,7 @@ export default function SideBar() {
             className={`
               w-full p-3 flex items-center gap-3
               hover:bg-base-300 transition-colors
-              ${selectedUser?.id === user.id ? "bg-base-300 ring-1 ring-base-300" : ""}
+              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
             `}
           >
             <div className="relative mx-auto lg:mx-0">
@@ -61,7 +63,7 @@ export default function SideBar() {
                 alt={user.name}
                 className="size-12 object-cover rounded-full"
               />
-              {onlineUsers.includes(user._id) && (
+              {onlineUsers.includes(String(user._id)) && (
                 <span
                   className="absolute bottom-0 right-0 size-3 bg-green-500 
                   rounded-full ring-[1px] ring-zinc-400"
@@ -73,7 +75,7 @@ export default function SideBar() {
             <div className="hidden lg:block text-left min-w-0">
               <div className="font-medium truncate">{user.username}</div>
               <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user.id) ? "Online" : "Offline"}
+                {onlineUsers.includes(String(user._id)) ? "Online" : "Offline"}
               </div>
             </div>
           </button>

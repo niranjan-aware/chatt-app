@@ -6,7 +6,6 @@ export default function ProfilePage() {
   const {authUser, isUpdatingProfile, updateProfile} = useAuthStore();
   const [selectedImg, setSelectedImg] = useState(null);
   const user = authUser || {};
-  console.log(user);
   
   const handleImageUpload= (e)=>{
     const file = e.target.files[0];
