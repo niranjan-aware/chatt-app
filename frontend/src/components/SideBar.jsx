@@ -1,28 +1,24 @@
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import SideBarSkeleton from "./skeletons/SideBarSkeleton";
+import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
 
-export default function SideBar() {
-  const {getUsers, users = [], selectedUser, setSelectedUser, isUsersLoading} = useChatStore();
+const Sidebar = () => {
+  const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  useEffect(()=>{
+
+  useEffect(() => {
     getUsers();
-  },[getUsers,onlineUsers]);
-  console.log(onlineUsers,users);
-  
+  }, [getUsers]);
 
-  
   const filteredUsers = showOnlineOnly
-  ? (users || []).filter((user) => (onlineUsers || []).includes(String(user._id)))
-  : (users || []);
+    ? users.filter((user) => onlineUsers.includes(user._id))
+    : users;
 
-  if(isUsersLoading){
-    return <SideBarSkeleton/>
-  }
+  if (isUsersLoading) return <SidebarSkeleton />;
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -41,8 +37,8 @@ export default function SideBar() {
               className="checkbox checkbox-sm"
             />
             <span className="text-sm">Show online only</span>
-          </label><span className="text-xs text-zinc-500">({Math.max((onlineUsers?.length || 0) - 1, 0)} online)</span>
-          
+          </label>
+          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
         </div>
       </div>
 
@@ -63,10 +59,10 @@ export default function SideBar() {
                 alt={user.name}
                 className="size-12 object-cover rounded-full"
               />
-              {onlineUsers.includes(String(user._id)) && (
+              {onlineUsers.includes(user._id) && (
                 <span
                   className="absolute bottom-0 right-0 size-3 bg-green-500 
-                  rounded-full ring-[1px] ring-zinc-400"
+                  rounded-full ring-2 ring-zinc-900"
                 />
               )}
             </div>
@@ -75,7 +71,7 @@ export default function SideBar() {
             <div className="hidden lg:block text-left min-w-0">
               <div className="font-medium truncate">{user.username}</div>
               <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(String(user._id)) ? "Online" : "Offline"}
+                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
               </div>
             </div>
           </button>
@@ -86,5 +82,6 @@ export default function SideBar() {
         )}
       </div>
     </aside>
-  )
-}
+  );
+};
+export default Sidebar;

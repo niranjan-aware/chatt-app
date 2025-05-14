@@ -3,12 +3,11 @@ import { useChatStore } from "../store/useChatStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function MessageInput() {
-
-  const[textInput, setTextInput] = useState("");
-  const [imagePreview, setImagePreview] =  useState(null);
+const MessageInput = () => {
+  const [text, setText] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const {sendMessage} = useChatStore();
+  const { sendMessage } = useChatStore();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -31,22 +30,23 @@ export default function MessageInput() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!textInput.trim() && !imagePreview) return;
+    if (!text.trim() && !imagePreview) return;
 
     try {
       await sendMessage({
-        text: textInput.trim(),
+        text: text.trim(),
         image: imagePreview,
       });
 
       // Clear form
-      setTextInput("");
+      setText("");
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to send message:", error);
     }
   };
+
   return (
     <div className="p-4 w-full">
       {imagePreview && (
@@ -75,8 +75,8 @@ export default function MessageInput() {
             type="text"
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
           />
           <input
             type="file"
@@ -98,11 +98,12 @@ export default function MessageInput() {
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!textInput.trim() && !imagePreview}
+          disabled={!text.trim() && !imagePreview}
         >
           <Send size={22} />
         </button>
       </form>
     </div>
-  )
-}
+  );
+};
+export default MessageInput;
