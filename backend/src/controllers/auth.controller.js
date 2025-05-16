@@ -11,7 +11,9 @@ export const signup = async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
     }
 
     const user = await User.findOne({ email });
@@ -32,11 +34,13 @@ export const signup = async (req, res) => {
       generateToken(newUser._id, res);
       await newUser.save();
 
-      res.status(201).json({
-        _id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-        profilePic: newUser.profilePic,
+      res.status(200).json({
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic,
+        friends: user.friends,
+        createdAt: user.createdAt,
       });
     } else {
       res.status(400).json({ message: "Invalid user data" });
@@ -68,7 +72,8 @@ export const login = async (req, res) => {
       username: user.username,
       email: user.email,
       profilePic: user.profilePic,
-      createsAt: user.createdAt
+      friends: user.friends, // optional
+      createdAt: user.createdAt,
     });
   } catch (error) {
     console.log("Error in login controller", error.message);

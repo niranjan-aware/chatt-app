@@ -6,20 +6,39 @@ import { useAuthStore } from "./useAuthStore";
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
+  friendsAndGroups:[],
   selectedUser: null,
-  isUsersLoading: false,
+  isfriendsAndGroupsLoading: false,
+  isUsersLoading:false,
   isMessagesLoading: false,
+  
 
   getUsers: async () => {
-    set({ isUsersLoading: true });
+    set({ isfriendsAndGroupsLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set({ users: res.data });
+      set({ friendsAndGroups: res.data });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
-      set({ isUsersLoading: false });
+      set({ isfriendsAndGroupsLoading: false });
     }
+  },
+
+  searchUser: async(username) => {
+    set({ isUsersLoading: true }); // ✅ fixed typo here
+  try {
+    const res = await axiosInstance.get("/users/search", {
+      params: { query: username },
+    });
+    set({ users: res.data });
+    return res.data; 
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Search failed");
+    throw error;
+  } finally {
+    set({ isUsersLoading: false });
+  }
   },
 
   getMessages: async (userId) => {
@@ -65,4 +84,12 @@ export const useChatStore = create((set, get) => ({
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
+
+  createGroup: async({}) => {
+    try {
+      
+    } catch (error) {
+      
+    }
+  }
 }));

@@ -1,10 +1,22 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
-import { LogOut, MessageSquare, Settings, User } from "lucide-react";
+import { useModalStore } from "../store/useModalStore";
+
+import {
+  LogOut,
+  MessageSquare,
+  Settings,
+  User,
+  Search,
+  UserPlus,
+  Users,
+  Bell
+} from "lucide-react";
 
 const Navbar = () => {
   const { logout, authUser } = useAuthStore();
-
+  const { openSearchModal, openCreateGroupModal } = useModalStore();
   return (
     <header
       className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 
@@ -13,7 +25,10 @@ const Navbar = () => {
       <div className="container mx-auto px-4 h-16">
         <div className="flex items-center justify-between h-full">
           <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-all">
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 hover:opacity-80 transition-all"
+            >
               <div className="size-9 rounded-lg bg-primary/10 flex items-center justify-center">
                 <MessageSquare className="w-5 h-5 text-primary" />
               </div>
@@ -35,11 +50,25 @@ const Navbar = () => {
 
             {authUser && (
               <>
+                <button className="flex gap-2 items-center" onClick={openCreateGroupModal}>
+                  <Users className="size-5" />
+                  <span className="hidden sm:inline">create group</span>
+                </button>
+                <button
+                  className="flex gap-2 items-center"
+                  onClick={openSearchModal}
+                >
+                  <Search className="size-5" />
+                  <span className="hidden sm:inline">Search user or group</span>
+                </button>
+
                 <Link to={"/profile"} className={`btn btn-sm gap-2`}>
                   <User className="size-5" />
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
-
+                <button className="flex gap-2 px-3 items-center">
+                  <Bell className="size-5" />
+                </button>
                 <button className="flex gap-2 items-center" onClick={logout}>
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
