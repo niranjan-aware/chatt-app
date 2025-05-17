@@ -2,9 +2,13 @@ import mongoose from "mongoose";
 
 const groupSchema = new mongoose.Schema(
   {
-    name: {
+    username: {
       type: String,
       required: true,
+    },
+    groupProfilePic: {
+      type: String,
+      default: "",
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

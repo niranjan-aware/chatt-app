@@ -6,12 +6,11 @@ import { useAuthStore } from "./useAuthStore";
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
-  friendsAndGroups:[],
+  friendsAndGroups: [],
   selectedUser: null,
   isfriendsAndGroupsLoading: false,
-  isUsersLoading:false,
+  isUsersLoading: false,
   isMessagesLoading: false,
-  
 
   getUsers: async () => {
     set({ isfriendsAndGroupsLoading: true });
@@ -25,20 +24,20 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  searchUser: async(username) => {
+  searchUser: async (username) => {
     set({ isUsersLoading: true }); // ✅ fixed typo here
-  try {
-    const res = await axiosInstance.get("/users/search", {
-      params: { query: username },
-    });
-    set({ users: res.data });
-    return res.data; 
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Search failed");
-    throw error;
-  } finally {
-    set({ isUsersLoading: false });
-  }
+    try {
+      const res = await axiosInstance.get("/users/search", {
+        params: { query: username },
+      });
+      set({ users: res.data });
+      return res.data;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Search failed");
+      throw error;
+    } finally {
+      set({ isUsersLoading: false });
+    }
   },
 
   getMessages: async (userId) => {
@@ -55,7 +54,10 @@ export const useChatStore = create((set, get) => ({
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
-      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+      const res = await axiosInstance.post(
+        `/messages/send/${selectedUser._id}`,
+        messageData
+      );
       set({ messages: [...messages, res.data] });
     } catch (error) {
       toast.error(error.response.data.message);
@@ -69,7 +71,8 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      const isMessageSentFromSelectedUser =
+        newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
 
       set({
@@ -85,11 +88,31 @@ export const useChatStore = create((set, get) => ({
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 
-  createGroup: async({}) => {
+  createGroup: async (payload) => {
     try {
-      
+      const res = await axiosInstance.post("/groups/create", payload);
+
+      toast.success("Group create");
     } catch (error) {
-      
+      toast.error(error.response.data.message);
+    }
+  },
+
+  sendFriendRequest: async(toUserId)=> {
+    try {
+      const res = await axiosInstance.post("/users/request",toUserId);
+      toast.success("Friend request sent")
+    } catch (error) {
+      toast.error(error.response?.data?.message, "Unable to sent request");
+    }
+  },
+
+  removeFriend: async(friendId)=>{
+    try {
+      const res = await axiosInstance.post("/users/remove",friendId);
+      toast.success("Friend removed successfully")
+    } catch (error) {
+      toast.error(error.response?.data?.message, "Unable to remove friend");
     }
   }
 }));

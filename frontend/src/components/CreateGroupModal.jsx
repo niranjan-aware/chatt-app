@@ -10,13 +10,13 @@ export default function CreateGroupModal() {
   const [results, setResults] = useState([]);
   const [error, setError] = useState("");
 
-  const { searchUser } = useChatStore();
+  const { searchUser, createGroup } = useChatStore();
   const { authUser } = useAuthStore();
 
   // State for group form
   const [groupName, setGroupName] = useState("");
-  const [members, setMembers] = useState([]); // Array of user objects
-  const [admins, setAdmins] = useState([]); // Subset of members
+  const [members, setMembers] = useState([]); 
+  const [admins, setAdmins] = useState([]); 
 
   // Debounced search function
   const handleSearch = useCallback(
@@ -78,14 +78,12 @@ export default function CreateGroupModal() {
 
     // Example payload
     const payload = {
-      name: groupName.trim(),
-      createdBy: authUser._id,
+      username: groupName.trim(),
       members: members.map((m) => m._id),
       admins: admins.map((a) => a._id),
     };
 
-    console.log("Group create payload:", payload);
-    // TODO: Call your backend API here...
+    createGroup(payload);
 
     // Reset & close modal
     setGroupName("");

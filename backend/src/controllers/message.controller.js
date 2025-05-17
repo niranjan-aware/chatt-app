@@ -15,7 +15,7 @@ export const getUsersForSidebar = async (req, res) => {
     const users = await User.find({ _id: { $in: user.friends } }).select("_id username profilePic");
 
     // Groups where the logged-in user is a member
-    const groups = await Group.find({ members: loggedInUserId }).select("_id name");
+    const groups = await Group.find({ members: loggedInUserId }).select("_id username  groupProfilePic createdBy  members  admins")
 
     const sidebarItems = [];
 
@@ -34,6 +34,8 @@ export const getUsersForSidebar = async (req, res) => {
         _id: user._id,
         username: user.username,
         profilePic: user.profilePic,
+        friends:user.friends,
+        friendRequests:user.friendRequests,
         lastMessageTime: lastMessage?.createdAt || null,
       });
     }
@@ -48,7 +50,11 @@ export const getUsersForSidebar = async (req, res) => {
       sidebarItems.push({
         type: "group",
         _id: group._id,
-        name: group.name,
+        username: group.username,
+        groupProfilePic: group.groupProfilePic,
+        createdBy:group.createdBy,
+        members:group.members,
+        admins:group.members,
         lastMessageTime: lastGroupMessage?.createdAt || null,
       });
     }
@@ -59,7 +65,7 @@ export const getUsersForSidebar = async (req, res) => {
       const bTime = b.lastMessageTime ? new Date(b.lastMessageTime) : new Date(0);
       return bTime - aTime;
     });
-
+    
     res.status(200).json(sidebarItems);
   } catch (error) {
     console.error("Error in getUsersForSidebar:", error.message);

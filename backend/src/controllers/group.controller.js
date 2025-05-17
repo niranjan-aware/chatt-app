@@ -2,16 +2,17 @@ import Group from "../models/group.model.js";
 import User from "../models/user.model.js";
 
 export const createGroup = async (req, res) => {
-  const { name, members = [], admins = [] } = req.body;
+  const { username, members = [], admins = [] } = req.body;
   const creatorId = req.user?._id;
 
-  if (!name || !creatorId) {
+  if (!username || !creatorId) {
     return res.status(400).json({ message: "Group name and creator are required." });
   }
 
   try {
     const group = await Group.create({
-      name,
+      username:username,
+      groupProfilePic:"",
       createdBy: creatorId,
       members: Array.from(new Set([...members, creatorId])),
       admins: Array.from(new Set([...admins, creatorId]))
