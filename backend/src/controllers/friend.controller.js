@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 // Send friend request
 export const sendFriendRequest = async (req, res) => {
-  const  userId  = req.user._id;  
+  const userId = req.user._id;  
   const { toUserId } = req.body;
 
   if (userId === toUserId) return res.status(400).json({ message: "Cannot add yourself" });
@@ -12,8 +12,8 @@ export const sendFriendRequest = async (req, res) => {
   if (!toUser) return res.status(404).json({ message: "User not found" });
 
   const alreadyFriend = toUser.friends.some(
-  (id) => id.toString() === userId.toString()
-);
+    (id) => id.toString() === userId.toString()
+  );
   if (alreadyFriend) return res.status(400).json({ message: "Already friends" });
 
   const alreadyRequested = toUser.friendRequests.find(
@@ -32,12 +32,16 @@ export const sendFriendRequest = async (req, res) => {
   toUser.friendRequests.push({ from: userId });
   await toUser.save();
 
+  // Emit socket event for real-time notification
+  const { io } = await import("../lib/socket.js");
+  io.emit("friend-request", { to: toUserId, from: userId });
+
   res.status(200).json({ message: "Friend request sent" });
 };
 
 // Accept request
 export const acceptFriendRequest = async (req, res) => {
-  const  userId  = req.user._id;  
+  const userId = req.user._id;  
   const { fromUserId } = req.body;
 
   const user = await User.findById(userId);
@@ -53,6 +57,10 @@ export const acceptFriendRequest = async (req, res) => {
 
   await user.save();
   await fromUser.save();
+
+  // Emit socket event for acceptance notification
+  const { io } = await import("../lib/socket.js");
+  io.emit("friend-accept", { to: fromUserId, from: userId });
 
   res.status(200).json({ message: "Friend request accepted" });
 };

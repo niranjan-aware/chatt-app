@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useModalStore } from "../store/useModalStore";
+import NotificationDropdown from "./NotificationDropdown";
 
 import {
   LogOut,
@@ -9,19 +9,15 @@ import {
   Settings,
   User,
   Search,
-  UserPlus,
   Users,
-  Bell
 } from "lucide-react";
 
 const Navbar = () => {
   const { logout, authUser } = useAuthStore();
   const { openSearchModal, openCreateGroupModal } = useModalStore();
+  
   return (
-    <header
-      className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 
-    backdrop-blur-lg bg-base-100/80"
-    >
+    <header className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 backdrop-blur-lg bg-base-100/80">
       <div className="container mx-auto px-4 h-16">
         <div className="flex items-center justify-between h-full">
           <div className="flex items-center gap-8">
@@ -39,10 +35,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2">
             <Link
               to={"/settings"}
-              className={`
-              btn btn-sm gap-2 transition-colors
-              
-              `}
+              className="btn btn-sm gap-2 transition-colors"
             >
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Settings</span>
@@ -52,23 +45,24 @@ const Navbar = () => {
               <>
                 <button className="flex gap-2 items-center" onClick={openCreateGroupModal}>
                   <Users className="size-5" />
-                  <span className="hidden sm:inline">create group</span>
+                  <span className="hidden sm:inline">Create Group</span>
                 </button>
                 <button
                   className="flex gap-2 items-center"
                   onClick={openSearchModal}
                 >
                   <Search className="size-5" />
-                  <span className="hidden sm:inline">Search user or group</span>
+                  <span className="hidden sm:inline">Search</span>
                 </button>
 
-                <Link to={"/profile"} className={`btn btn-sm gap-2`}>
+                <Link to={"/profile"} className="btn btn-sm gap-2">
                   <User className="size-5" />
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
-                <button className="flex gap-2 px-3 items-center">
-                  <Bell className="size-5"/>
-                </button>
+
+                {/* Replace the old bell button with NotificationDropdown */}
+                <NotificationDropdown />
+
                 <button className="flex gap-2 items-center" onClick={logout}>
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
@@ -81,4 +75,5 @@ const Navbar = () => {
     </header>
   );
 };
+
 export default Navbar;
