@@ -46,7 +46,6 @@ export const acceptFriendRequest = async (req, res) => {
 
   const user = await User.findById(userId);
   const request = user.friendRequests.find((r) => r.from.toString() === fromUserId && r.status === "pending");
-
   if (!request) return res.status(404).json({ message: "Request not found" });
 
   user.friends.push(fromUserId);

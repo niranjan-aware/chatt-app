@@ -30,7 +30,7 @@ export const getUsersForSidebar = async (req, res) => {
       }).sort({ createdAt: -1 });
 
       sidebarItems.push({
-        type: "user",
+        type: user.type,
         _id: user._id,
         username: user.username,
         profilePic: user.profilePic,
@@ -48,7 +48,7 @@ export const getUsersForSidebar = async (req, res) => {
       }).sort({ createdAt: -1 });
 
       sidebarItems.push({
-        type: "group",
+        type: group.type,
         _id: group._id,
         username: group.username,
         groupProfilePic: group.groupProfilePic,

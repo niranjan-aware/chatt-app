@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useModalStore } from "../store/useModalStore";
-import NotificationDropdown from "./NotificationDropdown";
 
 import {
   LogOut,
@@ -60,8 +59,7 @@ const Navbar = () => {
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
 
-                {/* Replace the old bell button with NotificationDropdown */}
-                <NotificationDropdown />
+               
 
                 <button className="flex gap-2 items-center" onClick={logout}>
                   <LogOut className="size-5" />

@@ -58,6 +58,8 @@ export const useChatStore = create((set, get) => ({
         `/messages/send/${selectedUser._id}`,
         messageData
       );
+      console.log(selectedUser._id);
+      
       set({ messages: [...messages, res.data] });
     } catch (error) {
       toast.error(error.response.data.message);

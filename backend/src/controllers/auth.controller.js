@@ -33,14 +33,14 @@ export const signup = async (req, res) => {
       // generate jwt token here
       generateToken(newUser._id, res);
       await newUser.save();
-
+      
       res.status(200).json({
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        profilePic: user.profilePic,
-        friends: user.friends,
-        createdAt: user.createdAt,
+        _id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        profilePic: newUser.profilePic,
+        friends: newUser.friends,
+        createdAt: newUser.createdAt,
       });
     } else {
       res.status(400).json({ message: "Invalid user data" });

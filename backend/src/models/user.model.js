@@ -22,6 +22,10 @@ const friendRequestSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema(
   {
+    type:{
+      type: String,
+      default: "user",
+    },
     email: {
       type: String,
       required: true,

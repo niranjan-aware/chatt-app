@@ -16,7 +16,6 @@ import { useEffect } from "react";
 import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import { useModalStore } from "./store/useModalStore";
-import { useNotificationSocket } from "./components/useNotificationSocket";
 
 
 const App = () => {
@@ -28,7 +27,6 @@ const App = () => {
     checkAuth();
   }, [checkAuth]);
 
-  useNotificationSocket();
 
   if (isCheckingAuth && !authUser)
     return (

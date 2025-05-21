@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const groupSchema = new mongoose.Schema(
   {
+    type:{
+      type: String,
+      default: "group",
+    },
     username: {
       type: String,
       required: true,
