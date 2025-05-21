@@ -1,40 +1,47 @@
-// models/Notification.js
-import mongoose from 'mongoose'
+// models/notification.model.js
+import mongoose from "mongoose";
 
-const NotificationSchema = new mongoose.Schema({
-  recipient: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const notificationSchema = new mongoose.Schema(
+  {
+    recipient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["message", "friend_request", "friend_accept", "group_invite", "group_message"],
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
+    relatedId: {
+      type: mongoose.Schema.Types.ObjectId,
+      // This can reference a message, user, or group depending on the notification type
+    },
+    metadata: {
+      // Additional data specific to notification types
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    }
   },
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  type: {
-    type: String,
-    enum: ['message', 'friend_request', 'friend_accept', 'other'],
-    required: true
-  },
-  content: {
-    type: String
-  },
-  relatedId: {
-    // ID of the message or friend request
-    type: mongoose.Schema.Types.ObjectId,
-    required: false
-  },
-  isRead: {
-    type: Boolean,
-    default: false
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  { timestamps: true }
+);
 
-const Notification = mongoose.model("Notification", NotificationSchema);
+notificationSchema.index({ recipient: 1, createdAt: -1 });
+notificationSchema.index({ recipient: 1, isRead: 1 });
+
+const Notification = mongoose.model("Notification", notificationSchema);
+
 export default Notification;
-

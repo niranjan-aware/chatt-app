@@ -1,3 +1,4 @@
+// socket/socket.js
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
@@ -59,6 +60,10 @@ io.on("connection", (socket) => {
           type: "message",
           content: `${sender.username} sent you a message`,
           relatedId: message._id,
+          metadata: {
+            messagePreview: message.text ? message.text.substring(0, 50) : "Sent an image",
+            hasImage: !!message.image
+          }
         });
         
         await notification.save();
@@ -70,6 +75,9 @@ io.on("connection", (socket) => {
             _id: notification._id,
             type: notification.type,
             content: notification.content,
+            isRead: notification.isRead,
+            relatedId: notification.relatedId,
+            metadata: notification.metadata,
             sender: {
               _id: userId,
               username: sender.username,
@@ -79,6 +87,58 @@ io.on("connection", (socket) => {
         }
       } catch (error) {
         console.error("Error creating message notification:", error);
+      }
+    } else {
+      // Handle group message notifications to all members except sender
+      try {
+        // Get group info including members
+        const group = await Group.findById(to).populate("members", "username");
+        const sender = await User.findById(userId).select("username");
+        
+        // Create notifications for all group members except sender
+        const notifications = await Promise.all(
+          group.members
+            .filter(member => member._id.toString() !== userId)
+            .map(async (member) => {
+              const notification = new Notification({
+                recipient: member._id,
+                sender: userId,
+                type: "group_message",
+                content: `${sender.username} sent a message in ${group.name}`,
+                relatedId: message._id,
+                metadata: {
+                  groupId: group._id,
+                  groupName: group.name,
+                  messagePreview: message.text ? message.text.substring(0, 50) : "Sent an image",
+                  hasImage: !!message.image
+                }
+              });
+              
+              await notification.save();
+              
+              // Emit to each member if online
+              const memberSocketId = getReceiverSocketId(member._id.toString());
+              if (memberSocketId) {
+                io.to(memberSocketId).emit("notification", {
+                  _id: notification._id,
+                  type: notification.type,
+                  content: notification.content,
+                  isRead: notification.isRead,
+                  relatedId: notification.relatedId,
+                  metadata: notification.metadata,
+                  sender: {
+                    _id: userId,
+                    username: sender.username,
+                  },
+                  createdAt: notification.createdAt,
+                });
+              }
+              
+              return notification;
+            })
+        );
+      } catch (error) {
+        console.error("Error creating group message notifications:", error);
       }
     }
   });
@@ -106,6 +166,7 @@ io.on("connection", (socket) => {
           _id: notification._id,
           type: notification.type,
           content: notification.content,
+          isRead: notification.isRead,
           sender: {
             _id: from,
             username: sender.username,
@@ -142,6 +203,7 @@ io.on("connection", (socket) => {
           _id: notification._id,
           type: notification.type,
           content: notification.content,
+          isRead: notification.isRead,
           sender: {
             _id: from,
             username: acceptor.username,

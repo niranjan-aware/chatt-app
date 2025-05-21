@@ -1,85 +1,58 @@
+// store/useNotificationStore
 import { create } from "zustand";
 import toast from "react-hot-toast";
+import { axiosInstance } from "../lib/axios";
+import { useAuthStore } from "./useAuthStore";
 
 export const useNotificationStore = create((set, get) => ({
   notifications: [],
   unreadCount: 0,
   isLoading: false,
+  isCountLoading: false,
 
-  // Fetch all notifications
-  fetchNotifications: async () => {
+  // Get all notifications
+  getNotifications: async () => {
     set({ isLoading: true });
     try {
-      const res = await fetch("/api/notifications", {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok) {
-        set({ notifications: data });
-        // Calculate unread count
-        const unreadCount = data.filter(notif => !notif.isRead).length;
-        set({ unreadCount });
-      }
+      const res = await axiosInstance.get("/notifications");
+      set({ notifications: res.data });
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      toast.error("Failed to load notifications");
+      toast.error(error.response?.data?.message || "Failed to load notifications");
     } finally {
       set({ isLoading: false });
     }
   },
 
-  // Get unread count
-  fetchUnreadCount: async () => {
+  // Get unread notification count
+  getUnreadCount: async () => {
+    set({ isCountLoading: true });
     try {
-      const res = await fetch("/api/notifications/unread-count", {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok) {
-        set({ unreadCount: data.count });
-      }
+      const res = await axiosInstance.get("/notifications/unread-count");
+      set({ unreadCount: res.data.count });
     } catch (error) {
-      console.error("Failed to fetch unread count:", error);
+      console.error("Failed to get notification count:", error);
+    } finally {
+      set({ isCountLoading: false });
     }
-  },
-
-  // Add new notification (from socket)
-  addNotification: (notification) => {
-    set((state) => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + 1,
-    }));
-    // Show toast notification
-    toast.success(notification.content, {
-      duration: 4000,
-      icon: "🔔",
-    });
   },
 
   // Mark specific notifications as read
   markAsRead: async (notificationIds) => {
     try {
-      const res = await fetch("/api/notifications/mark-read", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ notificationIds }),
-      });
-
-      if (res.ok) {
-        set((state) => ({
-          notifications: state.notifications.map((notif) =>
-            notificationIds.includes(notif._id)
-              ? { ...notif, isRead: true }
-              : notif
-          ),
-          unreadCount: Math.max(0, state.unreadCount - notificationIds.length),
-        }));
-      }
+      await axiosInstance.put("/notifications/mark-read", { notificationIds });
+      
+      // Update local state
+      set(state => ({
+        notifications: state.notifications.map(notif => 
+          notificationIds.includes(notif._id) 
+            ? { ...notif, isRead: true } 
+            : notif
+        ),
+        unreadCount: state.unreadCount - notificationIds.filter(id => 
+          state.notifications.find(n => n._id === id && !n.isRead)
+        ).length
+      }));
     } catch (error) {
-      console.error("Failed to mark notifications as read:", error);
       toast.error("Failed to mark notifications as read");
     }
   },
@@ -87,53 +60,185 @@ export const useNotificationStore = create((set, get) => ({
   // Mark all notifications as read
   markAllAsRead: async () => {
     try {
-      const res = await fetch("/api/notifications/mark-all-read", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        set((state) => ({
-          notifications: state.notifications.map((notif) => ({
-            ...notif,
-            isRead: true,
-          })),
-          unreadCount: 0,
-        }));
-        toast.success("All notifications marked as read");
-      }
+      const res = await axiosInstance.put("/notifications/mark-all-read");
+      
+      // Update local state
+      set(state => ({
+        notifications: state.notifications.map(notif => ({ ...notif, isRead: true })),
+        unreadCount: 0
+      }));
+      
+      toast.success("All notifications marked as read");
     } catch (error) {
-      console.error("Failed to mark all notifications as read:", error);
       toast.error("Failed to mark all notifications as read");
     }
   },
 
-  // Delete notification
+  // Delete a notification
   deleteNotification: async (notificationId) => {
     try {
-      const res = await fetch(`/api/notifications/${notificationId}`, {
-        method: "DELETE",
-        credentials: "include",
+      await axiosInstance.delete(`/notifications/${notificationId}`);
+      
+      // Update local state
+      set(state => {
+        const notif = state.notifications.find(n => n._id === notificationId);
+        const unreadDelta = notif && !notif.isRead ? 1 : 0;
+        
+        return {
+          notifications: state.notifications.filter(notif => notif._id !== notificationId),
+          unreadCount: Math.max(0, state.unreadCount - unreadDelta)
+        };
       });
-
-      if (res.ok) {
-        set((state) => {
-          const notification = state.notifications.find(n => n._id === notificationId);
-          return {
-            notifications: state.notifications.filter(n => n._id !== notificationId),
-            unreadCount: notification && !notification.isRead 
-              ? Math.max(0, state.unreadCount - 1) 
-              : state.unreadCount,
-          };
-        });
-        toast.success("Notification deleted");
-      }
+      
+      toast.success("Notification deleted");
     } catch (error) {
-      console.error("Failed to delete notification:", error);
       toast.error("Failed to delete notification");
     }
   },
 
-  // Clear all notifications from store
-  clearNotifications: () => set({ notifications: [], unreadCount: 0 }),
+  // Accept friend request
+  acceptFriendRequest: async (notificationId) => {
+    try {
+      const res = await axiosInstance.post(`/notifications/friend-request/${notificationId}/accept`);
+      
+      // Update local state
+      set(state => ({
+        notifications: state.notifications.map(notif => 
+          notif._id === notificationId ? { ...notif, isRead: true } : notif
+        ),
+        unreadCount: state.unreadCount - (state.notifications.find(n => n._id === notificationId && !n.isRead) ? 1 : 0)
+      }));
+      
+      toast.success("Friend request accepted");
+      
+      // Return the new friend data for potential use
+      return res.data.friend;
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to accept friend request");
+      return null;
+    }
+  },
+
+  // Decline friend request
+  declineFriendRequest: async (notificationId) => {
+    try {
+      await axiosInstance.post(`/notifications/friend-request/${notificationId}/decline`);
+      
+      // Update local state
+      set(state => {
+        const notif = state.notifications.find(n => n._id === notificationId);
+        const unreadDelta = notif && !notif.isRead ? 1 : 0;
+        
+        return {
+          notifications: state.notifications.filter(notif => notif._id !== notificationId),
+          unreadCount: Math.max(0, state.unreadCount - unreadDelta)
+        };
+      });
+      
+      toast.success("Friend request declined");
+    } catch (error) {
+      toast.error("Failed to decline friend request");
+    }
+  },
+
+  // Add a new notification (used with socket)
+  addNotification: (notification) => {
+    set(state => ({
+      notifications: [notification, ...state.notifications],
+      unreadCount: state.unreadCount + 1
+    }));
+  },
+
+  // Handle when a notification is marked read via socket
+  handleNotificationsMarkedRead: (notificationIds) => {
+    set(state => ({
+      notifications: state.notifications.map(notif => 
+        notificationIds.includes(notif._id) 
+          ? { ...notif, isRead: true } 
+          : notif
+      ),
+      unreadCount: state.unreadCount - notificationIds.filter(id => 
+        state.notifications.find(n => n._id === id && !n.isRead)
+      ).length
+    }));
+  },
+
+  // Handle when all notifications are marked read via socket
+  handleAllNotificationsMarkedRead: () => {
+    set(state => ({
+      notifications: state.notifications.map(notif => ({ ...notif, isRead: true })),
+      unreadCount: 0
+    }));
+  },
+
+  // Handle when a notification is deleted via socket
+  handleNotificationDeleted: (notificationId) => {
+    set(state => {
+      const notif = state.notifications.find(n => n._id === notificationId);
+      const unreadDelta = notif && !notif.isRead ? 1 : 0;
+      
+      return {
+        notifications: state.notifications.filter(notif => notif._id !== notificationId),
+        unreadCount: Math.max(0, state.unreadCount - unreadDelta)
+      };
+    });
+  },
+
+  // Set up socket listeners
+  subscribeToNotifications: () => {
+    const socket = useAuthStore.getState().socket;
+    const { 
+      addNotification, 
+      handleNotificationsMarkedRead, 
+      handleAllNotificationsMarkedRead,
+      handleNotificationDeleted
+    } = get();
+
+    // Listen for new notifications
+    socket.on("notification", (notification) => {
+      addNotification(notification);
+      
+      // Play notification sound
+      const audio = new Audio("/notification-sound.mp3");
+      audio.play().catch(e => console.log("Audio play prevented:", e));
+    });
+
+    // Listen for friend request accepted
+    socket.on("friend-request-accepted", (data) => {
+      const { notification } = data;
+      addNotification(notification);
+      
+      // Play notification sound
+      const audio = new Audio("/notification-sound.mp3");
+      audio.play().catch(e => console.log("Audio play prevented:", e));
+      
+      toast.success(`${data.username} accepted your friend request!`);
+    });
+
+    // Listen for notifications marked as read
+    socket.on("notifications-marked-read", (notificationIds) => {
+      handleNotificationsMarkedRead(notificationIds);
+    });
+
+    // Listen for all notifications marked as read
+    socket.on("all-notifications-marked-read", () => {
+      handleAllNotificationsMarkedRead();
+    });
+
+    // Listen for notification deleted
+    socket.on("notification-deleted", (notificationId) => {
+      handleNotificationDeleted(notificationId);
+    });
+  },
+
+  // Remove socket listeners
+  unsubscribeFromNotifications: () => {
+    const socket = useAuthStore.getState().socket;
+    
+    socket.off("notification");
+    socket.off("friend-request-accepted");
+    socket.off("notifications-marked-read");
+    socket.off("all-notifications-marked-read");
+    socket.off("notification-deleted");
+  },
 }));
