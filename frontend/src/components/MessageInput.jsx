@@ -7,7 +7,7 @@ const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const { sendMessage, selectedUser } = useChatStore();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -37,8 +37,6 @@ const MessageInput = () => {
         text: text.trim(),
         image: imagePreview,
       });
-      
-
       // Clear form
       setText("");
       setImagePreview(null);

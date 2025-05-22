@@ -12,11 +12,11 @@ export const getUsersForSidebar = async (req, res) => {
     const user = await User.findById(loggedInUserId).select("friends").lean();
 
     // Only fetch friends
-    const users = await User.find({ _id: { $in: user.friends } }).select("_id username profilePic");
+    const users = await User.find({ _id: { $in: user.friends } }).select("_id type username profilePic");
 
     // Groups where the logged-in user is a member
-    const groups = await Group.find({ members: loggedInUserId }).select("_id username  groupProfilePic createdBy  members  admins")
-
+    const groups = await Group.find({ members: loggedInUserId }).select("_id type username  groupProfilePic createdBy  members  admins")
+    
     const sidebarItems = [];
 
     // Add users with their last message info
@@ -65,7 +65,7 @@ export const getUsersForSidebar = async (req, res) => {
       const bTime = b.lastMessageTime ? new Date(b.lastMessageTime) : new Date(0);
       return bTime - aTime;
     });
-    
+
     res.status(200).json(sidebarItems);
   } catch (error) {
     console.error("Error in getUsersForSidebar:", error.message);
@@ -77,14 +77,24 @@ export const getUsersForSidebar = async (req, res) => {
 export const getMessages = async (req, res) => {
   try {
     const { id: userToChatId } = req.params;
+    const { type } = req.query;
     const myId = req.user._id;
-
-    const messages = await Message.find({
-      $or: [
-        { senderId: myId, receiverId: userToChatId },
-        { senderId: userToChatId, receiverId: myId },
-      ],
-    });
+    let messages;
+    console.log(type, myId);
+    
+    if (type === "group") {
+      // Fetch messages where groupId = userToChatId
+      messages = await Message.find({ groupId: userToChatId }).sort({ createdAt: 1 });
+    } else {
+      // Fetch direct messages between users
+      messages = await Message.find({
+        isGroup: false,
+        $or: [
+          { senderId: myId, receiverId: userToChatId },
+          { senderId: userToChatId, receiverId: myId },
+        ],
+      }).sort({ createdAt: 1 });
+    }
 
     res.status(200).json(messages);
   } catch (error) {
@@ -95,9 +105,10 @@ export const getMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const { text, image, isGroup } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
+    const senderUserName = req.user.username
 
     let imageUrl;
     if (image) {
@@ -107,11 +118,16 @@ export const sendMessage = async (req, res) => {
     }
 
     const newMessage = new Message({
+      senderUserName,
       senderId,
-      receiverId,
+      ...(isGroup ? { groupId: receiverId } : { receiverId }),
       text,
+      isGroup,
       image: imageUrl,
     });
+
+    console.log(newMessage);
+    
 
     await newMessage.save();
 

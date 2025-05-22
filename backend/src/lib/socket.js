@@ -39,92 +39,123 @@ io.on("connection", (socket) => {
   });
 
   // Handle sending messages
-  socket.on("send-message", async ({ to, message, isGroup, activeChatUserId }) => {
-  const room = isGroup ? to : to;
+  socket.on(
+    "send-message",
+    async ({ to, message, isGroup, activeChatUserId }) => {
+      try {
+        if (isGroup) {
+          // Fetch group data
+          const group = await Group.findById(to).lean();
+          if (!group) return;
 
-  io.to(room).emit("receive-message", {
-    from: userId,
-    message,
-    isGroup,
-  });
+          const sender = await User.findById(userId).select("username").lean();
 
-  // ✅ Skip notification if user is actively chatting with the sender
-  if (!isGroup && to !== activeChatUserId) {
-    try {
-      const sender = await User.findById(userId).select("username");
+          // Emit message to all group members via socket room
+          io.to(to).emit("receive-message", {
+            from: userId,
+            message,
+            isGroup: true,
+          });
 
-      const notification = new Notification({
-        recipient: to,
-        sender: userId,
-        type: "message",
-        content: `${sender.username} sent you a message`,
-        relatedId: message._id,
-        metadata: {
-          messagePreview: message.text ? message.text.substring(0, 50) : "Sent an image",
-          hasImage: !!message.image
+          // Create and send notifications to each group member (except sender and activeChatUser)
+          await Promise.all(
+            group.members
+              .filter(
+                (memberId) =>
+                  memberId.toString() !== userId &&
+                  memberId.toString() !== activeChatUserId
+              )
+              .map(async (memberId) => {
+                const notification = new Notification({
+                  recipient: memberId,
+                  sender: userId,
+                  type: "group_message",
+                  content: `${sender.username} sent a message in ${group.username}`,
+                  relatedId: message._id,
+                  metadata: {
+                    groupId: group._id,
+                    groupName: group.username,
+                    messagePreview: message.text
+                      ? message.text.substring(0, 50)
+                      : "Sent an image",
+                    hasImage: !!message.image,
+                  },
+                });
+
+                await notification.save();
+
+                const receiverSocketId = getReceiverSocketId(
+                  memberId.toString()
+                );
+                if (receiverSocketId) {
+                  io.to(receiverSocketId).emit("notification", {
+                    _id: notification._id,
+                    type: notification.type,
+                    content: notification.content,
+                    isRead: notification.isRead,
+                    relatedId: notification.relatedId,
+                    metadata: notification.metadata,
+                    sender: {
+                      _id: userId,
+                      username: sender.username,
+                    },
+                    createdAt: notification.createdAt,
+                  });
+                }
+              })
+          );
+        } else {
+          // 1-to-1 message handling
+          io.to(to).emit("receive-message", {
+            from: userId,
+            message,
+            isGroup: false,
+          });
+
+          if (to !== activeChatUserId) {
+            const sender = await User.findById(userId)
+              .select("username")
+              .lean();
+
+            const notification = new Notification({
+              recipient: to,
+              sender: userId,
+              type: "message",
+              content: `${sender.username} sent you a message`,
+              relatedId: message._id,
+              metadata: {
+                messagePreview: message.text
+                  ? message.text.substring(0, 50)
+                  : "Sent an image",
+                hasImage: !!message.image,
+              },
+            });
+
+            await notification.save();
+
+            const receiverSocketId = getReceiverSocketId(to);
+            if (receiverSocketId) {
+              io.to(receiverSocketId).emit("notification", {
+                _id: notification._id,
+                type: notification.type,
+                content: notification.content,
+                isRead: notification.isRead,
+                relatedId: notification.relatedId,
+                metadata: notification.metadata,
+                sender: {
+                  _id: userId,
+                  username: sender.username,
+                },
+                createdAt: notification.createdAt,
+              });
+            }
+          }
         }
-      });
-
-      await notification.save();
-
-      const receiverSocketId = getReceiverSocketId(to);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("notification", {
-          _id: notification._id,
-          type: notification.type,
-          content: notification.content,
-          isRead: notification.isRead,
-          relatedId: notification.relatedId,
-          metadata: notification.metadata,
-          sender: {
-            _id: userId,
-            username: sender.username,
-          },
-          createdAt: notification.createdAt,
-        });
+      } catch (error) {
+        console.error("Error handling send-message:", error);
       }
-    } catch (error) {
-      console.error("Error creating message notification:", error);
     }
-  }
-});
-
-  // Handle friend requests
-  socket.on("friend-request", async ({ to, from }) => {
-    try {
-      // Get sender's username
-      const sender = await User.findById(from).select("username profilePic");
-
-      // Create notification
-      const notification = new Notification({
-        recipient: to,
-        sender: from,
-        type: "friend_request",
-        content: `${sender.username} sent you a friend request`,
-      });
-
-      await notification.save();
-
-      // Emit notification to recipient
-      const receiverSocketId = getReceiverSocketId(to);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("notification", {
-          _id: notification._id,
-          type: notification.type,
-          content: notification.content,
-          isRead: notification.isRead,
-          sender: {
-            _id: from,
-            username: sender.username,
-            profilePic: sender.profilePic,
-          },
-          createdAt: notification.createdAt,
-        });
-      }
-    } catch (error) {
-      console.error("Error sending friend request notification:", error);
-    }
-  });
+  );
 
   // Handle friend request acceptance
   socket.on("friend-accept", async ({ to, from }) => {

@@ -23,7 +23,6 @@ const NotificationDropdown = () => {
   const handleMarkAllAsRead = async(e) => {
     e.preventDefault()
     markAllAsRead();
-    notifications = [];
   }
 
   const renderNotification = (notification) => {

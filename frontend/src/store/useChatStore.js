@@ -43,41 +43,45 @@ export const useChatStore = create((set, get) => ({
   },
 
   getMessages: async (userId) => {
-    set({ isMessagesLoading: true });
-    try {
-      const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
-    } catch (error) {
-      toast.error(error.response.data.message);
-    } finally {
-      set({ isMessagesLoading: false });
-    }
-  },
+  const { selectedUser } = get();
+  set({ isMessagesLoading: true });
+
+  try {
+    const res = await axiosInstance.get(
+      `/messages/${userId}?type=${selectedUser?.type}`
+    );
+    set({ messages: res.data });
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to load messages");
+  } finally {
+    set({ isMessagesLoading: false });
+  }
+},
 
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
-      // If receiverId is provided, use it, otherwise use selectedUser
       const recipientId = messageData.receiverId || selectedUser._id;
+      const isGroup = selectedUser?.type === "group"; // Determine if it's a group chat
 
       const res = await axiosInstance.post(`/messages/send/${recipientId}`, {
         text: messageData.text,
         image: messageData.image,
-        activeChatUserId: selectedUser?._id,
+        isGroup: selectedUser.type === "group" ? true : false
       });
 
-      // Only update messages if it's for the currently selected user
+      // Update local messages only if it's the currently selected chat
       if (recipientId === selectedUser?._id) {
         set({ messages: [...messages, res.data] });
       }
 
-      // Emit socket event for real-time communication
+      // Emit socket event
       const socket = useAuthStore.getState().socket;
       if (socket) {
         socket.emit("send-message", {
           to: recipientId,
           message: res.data,
-          isGroup: false,
+          isGroup, // true for group, false for user
           activeChatUserId: selectedUser?._id,
         });
       }

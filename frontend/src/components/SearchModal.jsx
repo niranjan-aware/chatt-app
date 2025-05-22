@@ -43,8 +43,6 @@ export default function SearchModal() {
       try {
         const data = await searchUser(value);
         setResults(data);
-        console.log("Search results:", data);
-        console.log("Auth user:", authUser);
         setError("");
       } catch (err) {
         setError(err.message || "Something went wrong");

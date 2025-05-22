@@ -68,7 +68,6 @@ const QuickReplyModal = () => {
           receiverId: messageModalData.recipientId,
         });
       }
-      console.log(messageModalData);
       deleteNotification(messageModalData.notificationId)
       handleClose();
       // deleteNotification(notification._id);
