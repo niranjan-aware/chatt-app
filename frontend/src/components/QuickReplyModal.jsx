@@ -4,9 +4,11 @@ import { useModalStore } from "../store/useModalStore";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { Send, X, Image } from "lucide-react";
+import { useNotificationStore } from "../store/useNotificationStore";
 
 const QuickReplyModal = () => {
   const { isMessageModalOpen, closeMessageModal, messageModalData } = useModalStore();
+  const {deleteNotification} = useNotificationStore();
   const { sendMessage } = useChatStore();
   const { authUser } = useAuthStore();
   
@@ -66,8 +68,10 @@ const QuickReplyModal = () => {
           receiverId: messageModalData.recipientId,
         });
       }
-      
+      console.log(messageModalData);
+      deleteNotification(messageModalData.notificationId)
       handleClose();
+      // deleteNotification(notification._id);
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {

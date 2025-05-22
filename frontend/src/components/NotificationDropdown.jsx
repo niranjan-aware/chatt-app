@@ -15,10 +15,16 @@ const NotificationDropdown = () => {
     markAllAsRead,
     unreadCount
   } = useNotificationStore();
-
+  
   useEffect(() => {
     getNotifications();
   }, [getNotifications]);
+
+  const handleMarkAllAsRead = async(e) => {
+    e.preventDefault()
+    markAllAsRead();
+    notifications = [];
+  }
 
   const renderNotification = (notification) => {
     switch (notification.type) {
@@ -42,7 +48,7 @@ const NotificationDropdown = () => {
             <button 
               className="btn btn-sm btn-ghost tooltip tooltip-left" 
               data-tip="Mark all as read"
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
             >
               <CheckCheck className="size-5" />
             </button>
@@ -64,7 +70,7 @@ const NotificationDropdown = () => {
           </div>
         ) : (
           <div className="divide-y divide-base-200">
-            {notifications.map((notification) => (
+            {notifications.filter((n) => !n.isRead).map((notification) => (
               <div key={notification._id}>
                 {renderNotification(notification)}
               </div>

@@ -59,30 +59,28 @@ export const useChatStore = create((set, get) => ({
     try {
       // If receiverId is provided, use it, otherwise use selectedUser
       const recipientId = messageData.receiverId || selectedUser._id;
-      
-      const res = await axiosInstance.post(
-        `/messages/send/${recipientId}`,
-        {
-          text: messageData.text,
-          image: messageData.image
-        }
-      );
-      
+
+      const res = await axiosInstance.post(`/messages/send/${recipientId}`, {
+        text: messageData.text,
+        image: messageData.image,
+        activeChatUserId: selectedUser?._id,
+      });
+
       // Only update messages if it's for the currently selected user
       if (recipientId === selectedUser?._id) {
         set({ messages: [...messages, res.data] });
       }
-      
+
       // Emit socket event for real-time communication
       const socket = useAuthStore.getState().socket;
       if (socket) {
         socket.emit("send-message", {
           to: recipientId,
           message: res.data,
-          isGroup: false
+          isGroup: false,
+          activeChatUserId: selectedUser?._id,
         });
       }
-      
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to send message");
     }
@@ -108,11 +106,14 @@ export const useChatStore = create((set, get) => ({
     // Listen for received messages (from socket)
     socket.on("receive-message", (data) => {
       const { from, message, isGroup } = data;
-      
-      // Only add to messages if it's from the currently selected user
-      if (!isGroup && from === selectedUser._id) {
+      const { selectedUser, messages } = get();
+
+      // Add this check: if message with same _id already exists, skip it
+      const isDuplicate = messages.some((m) => m._id === message._id);
+
+      if (!isGroup && from === selectedUser._id && !isDuplicate) {
         set({
-          messages: [...get().messages, message],
+          messages: [...messages, message],
         });
       }
     });
@@ -130,7 +131,7 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/groups/create", payload);
       toast.success("Group created");
-      
+
       // Refresh friends and groups list
       get().getUsers();
     } catch (error) {
@@ -141,18 +142,18 @@ export const useChatStore = create((set, get) => ({
   sendFriendRequest: async (toUserId) => {
     try {
       const res = await axiosInstance.post("/users/request", { toUserId });
-      
+
       // Emit socket event for real-time notification
       const socket = useAuthStore.getState().socket;
       const authUser = useAuthStore.getState().authUser;
-      
+
       if (socket && authUser) {
         socket.emit("friend-request", {
           to: toUserId,
-          from: authUser._id
+          from: authUser._id,
         });
       }
-      
+
       toast.success("Friend request sent");
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to send request");
@@ -162,20 +163,20 @@ export const useChatStore = create((set, get) => ({
   acceptFriendRequest: async (fromUserId) => {
     try {
       const res = await axiosInstance.post("/users/accept", { fromUserId });
-      
+
       // Emit socket event for real-time notification
       const socket = useAuthStore.getState().socket;
       const authUser = useAuthStore.getState().authUser;
-      
+
       if (socket && authUser) {
         socket.emit("friend-accept", {
           to: fromUserId,
-          from: authUser._id
+          from: authUser._id,
         });
       }
-      
+
       toast.success("Friend request accepted");
-      
+
       // Refresh friends list
       get().getUsers();
     } catch (error) {
@@ -187,7 +188,7 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("/users/remove", { friendId });
       toast.success("Friend removed successfully");
-      
+
       // Refresh friends list
       get().getUsers();
     } catch (error) {
@@ -199,21 +200,24 @@ export const useChatStore = create((set, get) => ({
   markMessageNotificationsAsRead: async (senderId) => {
     try {
       const { notifications } = useNotificationStore.getState();
-      
+
       // Find unread message notifications from this sender
       const unreadMessageNotifications = notifications
-        .filter(notif => 
-          notif.type === "message" && 
-          notif.sender._id === senderId && 
-          !notif.isRead
+        .filter(
+          (notif) =>
+            notif.type === "message" &&
+            notif.sender._id === senderId &&
+            !notif.isRead
         )
-        .map(notif => notif._id);
-      
+        .map((notif) => notif._id);
+
       if (unreadMessageNotifications.length > 0) {
-        await useNotificationStore.getState().markAsRead(unreadMessageNotifications);
+        await useNotificationStore
+          .getState()
+          .markAsRead(unreadMessageNotifications);
       }
     } catch (error) {
       console.error("Error marking message notifications as read:", error);
     }
-  }
+  },
 }));

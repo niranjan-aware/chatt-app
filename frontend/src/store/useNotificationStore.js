@@ -3,6 +3,8 @@ import { create } from "zustand";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
+import { useChatStore } from "./useChatStore";
+
 
 export const useNotificationStore = create((set, get) => ({
   notifications: [],
@@ -12,10 +14,19 @@ export const useNotificationStore = create((set, get) => ({
 
   // Get all notifications
   getNotifications: async () => {
+    const selectedUser = useChatStore.getState().selectedUser;
+    const selectedUserId = selectedUser?._id || null
     set({ isLoading: true });
     try {
       const res = await axiosInstance.get("/notifications");
-      set({ notifications: res.data });
+      const allNotifications = res.data;
+      console.log(selectedUserId, get().unreadCount, allNotifications);
+      
+    const filteredNotifications = selectedUserId
+      ? allNotifications.filter(notif => notif.sender._id !== selectedUserId)
+      : allNotifications;
+
+    set({ notifications: filteredNotifications })
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to load notifications");
     } finally {

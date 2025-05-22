@@ -4,6 +4,7 @@ import http from "http";
 import express from "express";
 import Notification from "../models/notification.model.js";
 import User from "../models/user.model.js";
+import Group from "../models/group.model.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -38,117 +39,62 @@ io.on("connection", (socket) => {
   });
 
   // Handle sending messages
-  socket.on("send-message", async ({ to, message, isGroup }) => {
-    const room = isGroup ? to : to;
-    
-    io.to(room).emit("receive-message", {
-      from: userId,
-      message,
-      isGroup,
-    });
+  socket.on("send-message", async ({ to, message, isGroup, activeChatUserId }) => {
+  const room = isGroup ? to : to;
 
-    // Generate notification for direct messages (not group)
-    if (!isGroup) {
-      try {
-        // Get sender's username for notification content
-        const sender = await User.findById(userId).select("username");
-        
-        // Create notification
-        const notification = new Notification({
-          recipient: to,
-          sender: userId,
-          type: "message",
-          content: `${sender.username} sent you a message`,
-          relatedId: message._id,
-          metadata: {
-            messagePreview: message.text ? message.text.substring(0, 50) : "Sent an image",
-            hasImage: !!message.image
-          }
-        });
-        
-        await notification.save();
-        
-        // Emit notification to recipient
-        const receiverSocketId = getReceiverSocketId(to);
-        if (receiverSocketId) {
-          io.to(receiverSocketId).emit("notification", {
-            _id: notification._id,
-            type: notification.type,
-            content: notification.content,
-            isRead: notification.isRead,
-            relatedId: notification.relatedId,
-            metadata: notification.metadata,
-            sender: {
-              _id: userId,
-              username: sender.username,
-            },
-            createdAt: notification.createdAt,
-          });
-        }
-      } catch (error) {
-        console.error("Error creating message notification:", error);
-      }
-    } else {
-      // Handle group message notifications to all members except sender
-      try {
-        // Get group info including members
-        const group = await Group.findById(to).populate("members", "username");
-        const sender = await User.findById(userId).select("username");
-        
-        // Create notifications for all group members except sender
-        const notifications = await Promise.all(
-          group.members
-            .filter(member => member._id.toString() !== userId)
-            .map(async (member) => {
-              const notification = new Notification({
-                recipient: member._id,
-                sender: userId,
-                type: "group_message",
-                content: `${sender.username} sent a message in ${group.name}`,
-                relatedId: message._id,
-                metadata: {
-                  groupId: group._id,
-                  groupName: group.name,
-                  messagePreview: message.text ? message.text.substring(0, 50) : "Sent an image",
-                  hasImage: !!message.image
-                }
-              });
-              
-              await notification.save();
-              
-              // Emit to each member if online
-              const memberSocketId = getReceiverSocketId(member._id.toString());
-              if (memberSocketId) {
-                io.to(memberSocketId).emit("notification", {
-                  _id: notification._id,
-                  type: notification.type,
-                  content: notification.content,
-                  isRead: notification.isRead,
-                  relatedId: notification.relatedId,
-                  metadata: notification.metadata,
-                  sender: {
-                    _id: userId,
-                    username: sender.username,
-                  },
-                  createdAt: notification.createdAt,
-                });
-              }
-              
-              return notification;
-            })
-        );
-      } catch (error) {
-        console.error("Error creating group message notifications:", error);
-      }
-    }
+  io.to(room).emit("receive-message", {
+    from: userId,
+    message,
+    isGroup,
   });
+
+  // ✅ Skip notification if user is actively chatting with the sender
+  if (!isGroup && to !== activeChatUserId) {
+    try {
+      const sender = await User.findById(userId).select("username");
+
+      const notification = new Notification({
+        recipient: to,
+        sender: userId,
+        type: "message",
+        content: `${sender.username} sent you a message`,
+        relatedId: message._id,
+        metadata: {
+          messagePreview: message.text ? message.text.substring(0, 50) : "Sent an image",
+          hasImage: !!message.image
+        }
+      });
+
+      await notification.save();
+
+      const receiverSocketId = getReceiverSocketId(to);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("notification", {
+          _id: notification._id,
+          type: notification.type,
+          content: notification.content,
+          isRead: notification.isRead,
+          relatedId: notification.relatedId,
+          metadata: notification.metadata,
+          sender: {
+            _id: userId,
+            username: sender.username,
+          },
+          createdAt: notification.createdAt,
+        });
+      }
+    } catch (error) {
+      console.error("Error creating message notification:", error);
+    }
+  }
+});
 
   // Handle friend requests
   socket.on("friend-request", async ({ to, from }) => {
     try {
       // Get sender's username
       const sender = await User.findById(from).select("username profilePic");
-      
+
       // Create notification
       const notification = new Notification({
         recipient: to,
@@ -156,9 +102,9 @@ io.on("connection", (socket) => {
         type: "friend_request",
         content: `${sender.username} sent you a friend request`,
       });
-      
+
       await notification.save();
-      
+
       // Emit notification to recipient
       const receiverSocketId = getReceiverSocketId(to);
       if (receiverSocketId) {
@@ -170,7 +116,7 @@ io.on("connection", (socket) => {
           sender: {
             _id: from,
             username: sender.username,
-            profilePic: sender.profilePic
+            profilePic: sender.profilePic,
           },
           createdAt: notification.createdAt,
         });
@@ -185,17 +131,17 @@ io.on("connection", (socket) => {
     try {
       // Get acceptor's username
       const acceptor = await User.findById(from).select("username profilePic");
-      
+
       // Create notification
       const notification = new Notification({
         recipient: to, // Original requester
-        sender: from,  // Person who accepted
+        sender: from, // Person who accepted
         type: "friend_accept",
         content: `${acceptor.username} accepted your friend request`,
       });
-      
+
       await notification.save();
-      
+
       // Emit notification to recipient
       const receiverSocketId = getReceiverSocketId(to);
       if (receiverSocketId) {
@@ -207,7 +153,7 @@ io.on("connection", (socket) => {
           sender: {
             _id: from,
             username: acceptor.username,
-            profilePic: acceptor.profilePic
+            profilePic: acceptor.profilePic,
           },
           createdAt: notification.createdAt,
         });

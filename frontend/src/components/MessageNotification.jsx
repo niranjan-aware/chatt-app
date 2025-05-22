@@ -43,6 +43,7 @@ const MessageNotification = ({ notification }) => {
       recipientId: notification.sender._id,
       recipientName: notification.sender.username,
       messagePreview: notification.metadata?.messagePreview,
+      notificationId: notification._id,
     });
   };
   

@@ -31,7 +31,7 @@ const ChatContainer = () => {
       
       // Subscribe to real-time messages
       subscribeToMessages();
-
+      
       return () => unsubscribeFromMessages();
     }
   }, [
