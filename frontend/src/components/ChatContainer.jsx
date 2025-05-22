@@ -1,3 +1,4 @@
+// components/ChatContainer.jsx
 import { useChatStore } from "../store/useChatStore";
 import { useEffect, useRef } from "react";
 
@@ -15,17 +16,31 @@ const ChatContainer = () => {
     selectedUser,
     subscribeToMessages,
     unsubscribeFromMessages,
+    markMessageNotificationsAsRead,
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
-    getMessages(selectedUser._id);
-    
-    subscribeToMessages();
+    if (selectedUser?._id) {
+      // Get messages for selected user
+      getMessages(selectedUser._id);
+      
+      // Mark message notifications from this user as read
+      markMessageNotificationsAsRead(selectedUser._id);
+      
+      // Subscribe to real-time messages
+      subscribeToMessages();
 
-    return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+      return () => unsubscribeFromMessages();
+    }
+  }, [
+    selectedUser?._id, 
+    getMessages, 
+    subscribeToMessages, 
+    unsubscribeFromMessages,
+    markMessageNotificationsAsRead
+  ]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -54,7 +69,7 @@ const ChatContainer = () => {
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
             ref={messageEndRef}
           >
-            <div className=" chat-image avatar">
+            <div className="chat-image avatar">
               <div className="size-10 rounded-full border">
                 <img
                   src={
@@ -89,4 +104,5 @@ const ChatContainer = () => {
     </div>
   );
 };
+
 export default ChatContainer;

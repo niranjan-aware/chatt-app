@@ -13,7 +13,7 @@ const NotificationBadge = ({ onClick }) => {
       <Bell className="size-5" />
       {unreadCount > 0 && (
         <div className="absolute -top-1 -right-1 bg-error text-white rounded-full size-5 flex items-center justify-center text-xs font-bold">
-          {unreadCount > 99 ? "99+" : unreadCount}
+          {unreadCount > 10 ? "10+" : unreadCount}
         </div>
       )}
     </button>

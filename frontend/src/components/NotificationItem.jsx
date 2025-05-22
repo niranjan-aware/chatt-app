@@ -9,6 +9,7 @@ const NotificationItem = ({ notification, children }) => {
   const handleClick = () => {
     if (!notification.isRead) {
       markAsRead([notification._id]);
+      deleteNotification(notification._id);
     }
   };
 
