@@ -13,7 +13,7 @@ const Sidebar = () => {
   useEffect(() => {
     getUsers();
   }, [getUsers]);
-
+  
 
   const filteredUsers = showOnlineOnly
     ? friendsAndGroups.filter((user) => onlineUsers.includes(user._id))
@@ -71,9 +71,12 @@ const Sidebar = () => {
             {/* User info - only visible on larger screens */}
             <div className="hidden lg:block text-left min-w-0">
               <div className="font-medium truncate">{user.username}</div>
-              <div className="text-sm text-zinc-400">
-                {onlineUsers.includes(user._id) ? "Online" : "Offline"}
+              {
+                user.type === "user" &&
+                <div className="text-sm text-zinc-400">
+                {onlineUsers.includes(user._id)  ? "Online" : "Offline"}
               </div>
+              }
             </div>
           </button>
         ))}

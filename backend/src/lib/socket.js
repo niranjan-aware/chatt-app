@@ -157,43 +157,6 @@ io.on("connection", (socket) => {
     }
   );
 
-  // Handle friend request acceptance
-  socket.on("friend-accept", async ({ to, from }) => {
-    try {
-      // Get acceptor's username
-      const acceptor = await User.findById(from).select("username profilePic");
-
-      // Create notification
-      const notification = new Notification({
-        recipient: to, // Original requester
-        sender: from, // Person who accepted
-        type: "friend_accept",
-        content: `${acceptor.username} accepted your friend request`,
-      });
-
-      await notification.save();
-
-      // Emit notification to recipient
-      const receiverSocketId = getReceiverSocketId(to);
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("notification", {
-          _id: notification._id,
-          type: notification.type,
-          content: notification.content,
-          isRead: notification.isRead,
-          sender: {
-            _id: from,
-            username: acceptor.username,
-            profilePic: acceptor.profilePic,
-          },
-          createdAt: notification.createdAt,
-        });
-      }
-    } catch (error) {
-      console.error("Error sending friend acceptance notification:", error);
-    }
-  });
-
   // Handle notification read status
   socket.on("mark-notifications-read", async (notificationIds) => {
     try {

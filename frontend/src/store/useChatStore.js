@@ -145,6 +145,7 @@ export const useChatStore = create((set, get) => ({
 
   sendFriendRequest: async (toUserId) => {
     try {
+      
       const res = await axiosInstance.post("/users/request", { toUserId });
 
       // Emit socket event for real-time notification

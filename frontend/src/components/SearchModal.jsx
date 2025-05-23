@@ -15,7 +15,7 @@ export default function SearchModal() {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [localFriends, setLocalFriends] = useState([]);
 
-  const { searchUser, sendFriendRequest, removeFriend, getUsers } = useChatStore();
+  const { searchUser, sendFriendRequest, removeFriend, getUsers, friendsAndGroups } = useChatStore();
   const { authUser } = useAuthStore();
 
   // Initialize local state from authUser when it changes
@@ -55,7 +55,7 @@ export default function SearchModal() {
 
   useEffect(() => {
     handleSearch(query);
-  }, [query, handleSearch]);
+  }, [query, handleSearch, friendsAndGroups]);
 
   const isFriend = (userId) => {
     // Check local state first, then fall back to authUser

@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useChatStore } from "../store/useChatStore";
 import { MessageSquare, UserCheck } from "lucide-react";
 import NotificationItem from "./NotificationItem";
+import { useNotificationStore } from "../store/useNotificationStore"
 
 const FriendAcceptNotification = ({ notification }) => {
   const navigate = useNavigate();
   const { setSelectedUser, getMessages } = useChatStore();
+  const { markAsRead, deleteNotification } = useNotificationStore();
   
   // Navigate to chat with the new friend
   const handleMessage = async (e) => {
@@ -25,6 +27,10 @@ const FriendAcceptNotification = ({ notification }) => {
       
       // Navigate to chat page
       navigate("/");
+      if (!notification.isRead) {
+      markAsRead([notification._id]);
+    }
+      
     } catch (error) {
       console.error("Error navigating to chat:", error);
     }

@@ -80,7 +80,6 @@ export const getMessages = async (req, res) => {
     const { type } = req.query;
     const myId = req.user._id;
     let messages;
-    console.log(type, myId);
     
     if (type === "group") {
       // Fetch messages where groupId = userToChatId
@@ -125,9 +124,6 @@ export const sendMessage = async (req, res) => {
       isGroup,
       image: imageUrl,
     });
-
-    console.log(newMessage);
-    
 
     await newMessage.save();
 
