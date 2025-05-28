@@ -97,6 +97,53 @@ const seedUsers = [
     username: "Daniel Rodriguez",
     password: "123456",
     profilePic: "https://randomuser.me/api/portraits/men/7.jpg",
+  },{
+    email: "priya.sharma@example.in",
+    username: "Priya Sharma",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/women/65.jpg",
+  },
+  {
+    email: "ananya.iyer@example.in",
+    username: "Ananya Iyer",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/women/66.jpg",
+  },
+  {
+    email: "sneha.patel@example.in",
+    username: "Sneha Patel",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/women/67.jpg",
+  },
+  {
+    email: "kavya.verma@example.in",
+    username: "Kavya Verma",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/women/68.jpg",
+  },
+  {
+    email: "rahul.mehra@example.in",
+    username: "Rahul Mehra",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/men/65.jpg",
+  },
+  {
+    email: "arjun.kumar@example.in",
+    username: "Arjun Kumar",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/men/66.jpg",
+  },
+  {
+    email: "rohit.singh@example.in",
+    username: "Rohit Singh",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/men/67.jpg",
+  },
+  {
+    email: "amit.desai@example.in",
+    username: "Amit Desai",
+    password: "123456",
+    profilePic: "https://randomuser.me/api/portraits/men/68.jpg",
   },
 ];
 

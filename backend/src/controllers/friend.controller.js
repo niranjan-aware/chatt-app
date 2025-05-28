@@ -3,7 +3,7 @@ import Notification from "../models/notification.model.js";
 import mongoose from "mongoose";
 import { io, getReceiverSocketId } from "../lib/socket.js";
 
-// Send friend request
+
 export const sendFriendRequest = async (req, res) => {
   try {
     const userId = req.user._id;  
@@ -37,7 +37,7 @@ console.log(toUser, currentUser);
       return res.status(400).json({ message: "Request already sent" });
     }
 
-    // Decline cooldown check
+ 
     const declined = toUser.friendRequests.find(
       (r) => r.from.toString() === userId.toString() && r.status === "declined"
     );
@@ -45,11 +45,10 @@ console.log(toUser, currentUser);
       return res.status(400).json({ message: "Wait 3 days before re-requesting" });
     }
 
-    // Add friend request to user's friendRequests array
     toUser.friendRequests.push({ from: userId });
     await toUser.save();
 
-    // Create notification in database
+
     const notification = new Notification({
       recipient: toUserId,
       sender: userId,
@@ -59,7 +58,7 @@ console.log(toUser, currentUser);
 
     await notification.save();
 
-    // Emit socket event for real-time notification
+    
     const receiverSocketId = getReceiverSocketId(toUserId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("notification", {
@@ -83,7 +82,6 @@ console.log(toUser, currentUser);
   }
 };
 
-// Accept request
 export const acceptFriendRequest = async (req, res) => {
   try {
     const userId = req.user._id;  
@@ -100,7 +98,7 @@ export const acceptFriendRequest = async (req, res) => {
       return res.status(404).json({ message: "Request not found" });
     }
 
-    // Add to friends lists
+    
     user.friends.push(fromUserId);
     user.friendRequests = user.friendRequests.filter(
       (r) => r.from.toString() !== fromUserId
@@ -112,10 +110,10 @@ export const acceptFriendRequest = async (req, res) => {
     await user.save();
     await fromUser.save();
 
-    // Get current user info for the acceptance notification
+   
     const currentUser = await User.findById(userId).select("username profilePic");
 
-    // Create acceptance notification for the sender
+    
     const acceptanceNotification = new Notification({
       recipient: fromUserId,
       sender: userId,
@@ -125,7 +123,7 @@ export const acceptFriendRequest = async (req, res) => {
 
     await acceptanceNotification.save();
 
-    // Emit socket event for acceptance notification
+    
     const senderSocketId = getReceiverSocketId(fromUserId);
     if (senderSocketId) {
       io.to(senderSocketId).emit("notification", {
@@ -156,7 +154,7 @@ export const acceptFriendRequest = async (req, res) => {
   }
 };
 
-// Decline
+
 export const declineFriendRequest = async (req, res) => {
   try {
     const userId = req.user._id;  
@@ -181,7 +179,7 @@ export const declineFriendRequest = async (req, res) => {
   }
 };
 
-// Get friends
+
 export const getFriends = async (req, res) => {
   try {
     const userId = req.user._id;  

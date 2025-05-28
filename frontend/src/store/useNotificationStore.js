@@ -12,7 +12,6 @@ export const useNotificationStore = create((set, get) => ({
   isLoading: false,
   isCountLoading: false,
 
-  // Get all notifications
   getNotifications: async () => {
     const selectedUser = useChatStore.getState().selectedUser;
     const selectedUserId = selectedUser?._id || null
@@ -34,7 +33,6 @@ export const useNotificationStore = create((set, get) => ({
     }
   },
 
-  // Get unread notification count
   getUnreadCount: async () => {
     set({ isCountLoading: true });
     try {
@@ -47,12 +45,10 @@ export const useNotificationStore = create((set, get) => ({
     }
   },
 
-  // Mark specific notifications as read
   markAsRead: async (notificationIds) => {
     try {
       await axiosInstance.put("/notifications/mark-read", { notificationIds });
       
-      // Update local state
       set(state => ({
         notifications: state.notifications.map(notif => 
           notificationIds.includes(notif._id) 
@@ -68,7 +64,6 @@ export const useNotificationStore = create((set, get) => ({
     }
   },
 
-  // Mark all notifications as read
   markAllAsRead: async () => {
     try {
       const res = await axiosInstance.put("/notifications/mark-all-read");
@@ -85,7 +80,6 @@ export const useNotificationStore = create((set, get) => ({
     }
   },
 
-  // Delete a notification
   deleteNotification: async (notificationId) => {
     try {
       await axiosInstance.delete(`/notifications/${notificationId}`);
@@ -107,7 +101,6 @@ export const useNotificationStore = create((set, get) => ({
     }
   },
 
-  // Accept friend request
   acceptFriendRequest: async (notificationId) => {
     try {
       const res = await axiosInstance.post(`/notifications/friend-request/${notificationId}/accept`);
@@ -130,7 +123,6 @@ export const useNotificationStore = create((set, get) => ({
     }
   },
 
-  // Decline friend request
   declineFriendRequest: async (notificationId) => {
     try {
       await axiosInstance.post(`/notifications/friend-request/${notificationId}/decline`);

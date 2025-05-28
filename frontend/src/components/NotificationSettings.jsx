@@ -186,7 +186,7 @@ const NotificationSettings = () => {
               </div>
             </div>
             <div className="flex-1">
-              <p className="font-medium">John Doe</p>
+              <p className="font-medium">Niranjan Aware</p>
               <p className="text-sm text-base-content/80">sent you a message</p>
               <p className="text-xs text-base-content/60 mt-1">2 minutes ago</p>
             </div>

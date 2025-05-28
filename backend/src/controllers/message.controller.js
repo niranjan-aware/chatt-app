@@ -11,15 +11,15 @@ export const getUsersForSidebar = async (req, res) => {
 
     const user = await User.findById(loggedInUserId).select("friends").lean();
 
-    // Only fetch friends
+  
     const users = await User.find({ _id: { $in: user.friends } }).select("_id type username profilePic");
 
-    // Groups where the logged-in user is a member
+   
     const groups = await Group.find({ members: loggedInUserId }).select("_id type username  groupProfilePic createdBy  members  admins")
     
     const sidebarItems = [];
 
-    // Add users with their last message info
+   
     for (const user of users) {
       const lastMessage = await Message.findOne({
         isGroup: false,
@@ -40,7 +40,7 @@ export const getUsersForSidebar = async (req, res) => {
       });
     }
 
-    // Add groups with their last message info
+
     for (const group of groups) {
       const lastGroupMessage = await Message.findOne({
         isGroup: true,
@@ -59,7 +59,7 @@ export const getUsersForSidebar = async (req, res) => {
       });
     }
 
-    // Sort by last message time (latest first)
+    
     sidebarItems.sort((a, b) => {
       const aTime = a.lastMessageTime ? new Date(a.lastMessageTime) : new Date(0);
       const bTime = b.lastMessageTime ? new Date(b.lastMessageTime) : new Date(0);
@@ -82,10 +82,10 @@ export const getMessages = async (req, res) => {
     let messages;
     
     if (type === "group") {
-      // Fetch messages where groupId = userToChatId
+      
       messages = await Message.find({ groupId: userToChatId }).sort({ createdAt: 1 });
     } else {
-      // Fetch direct messages between users
+      
       messages = await Message.find({
         isGroup: false,
         $or: [
@@ -111,7 +111,7 @@ export const sendMessage = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      // Upload base64 image to cloudinary
+      
       const uploadResponse = await cloudinary.uploader.upload(image);
       imageUrl = uploadResponse.secure_url;
     }

@@ -1,9 +1,8 @@
-// controllers/notification.controller.js
 import Notification from "../models/notification.model.js";
 import User from "../models/user.model.js";
 import { io, getReceiverSocketId } from "../lib/socket.js";
 
-// Get all notifications for the logged-in user
+
 export const getNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -20,7 +19,6 @@ export const getNotifications = async (req, res) => {
   }
 };
 
-// Get unread notification count
 export const getUnreadCount = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -37,7 +35,6 @@ export const getUnreadCount = async (req, res) => {
   }
 };
 
-// Mark notifications as read
 export const markAsRead = async (req, res) => {
   try {
     const { notificationIds } = req.body;
@@ -46,12 +43,12 @@ export const markAsRead = async (req, res) => {
     await Notification.updateMany(
       { 
         _id: { $in: notificationIds },
-        recipient: userId // Ensure user can only mark their own notifications
+        recipient: userId 
       },
       { $set: { isRead: true } }
     );
     
-    // Emit socket event to update UI in real-time
+  
     const socketId = getReceiverSocketId(userId);
     if (socketId) {
       io.to(socketId).emit("notifications-marked-read", notificationIds);
@@ -64,7 +61,7 @@ export const markAsRead = async (req, res) => {
   }
 };
 
-// Mark all notifications as read
+
 export const markAllAsRead = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -74,7 +71,7 @@ export const markAllAsRead = async (req, res) => {
       { $set: { isRead: true } }
     );
     
-    // Emit socket event to update UI in real-time
+    
     const socketId = getReceiverSocketId(userId);
     if (socketId) {
       io.to(socketId).emit("all-notifications-marked-read");
@@ -90,7 +87,7 @@ export const markAllAsRead = async (req, res) => {
   }
 };
 
-// Delete a notification
+
 export const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
@@ -104,7 +101,7 @@ export const deleteNotification = async (req, res) => {
     
     await notification.deleteOne();
     
-    // Emit socket event to update UI in real-time
+    
     const socketId = getReceiverSocketId(userId);
     if (socketId) {
       io.to(socketId).emit("notification-deleted", id);
@@ -117,13 +114,13 @@ export const deleteNotification = async (req, res) => {
   }
 };
 
-// Accept friend request from notification
+
 export const acceptFriendRequest = async (req, res) => {
   try {
     const { notificationId } = req.params;
     const userId = req.user._id;
     
-    // Find the notification and ensure it's a friend request
+    
     const notification = await Notification.findOne({ 
       _id: notificationId, 
       recipient: userId,
@@ -136,7 +133,7 @@ export const acceptFriendRequest = async (req, res) => {
     
     const senderId = notification.sender._id;
     
-    // Update both users' friend lists
+    
     await User.findByIdAndUpdate(
       userId,
       { $addToSet: { friends: senderId } }
@@ -147,14 +144,14 @@ export const acceptFriendRequest = async (req, res) => {
       { $addToSet: { friends: userId } }
     );
     
-    // Mark notification as read
+  
     notification.isRead = true;
     await notification.save();
     
-    // Get current user info for the acceptance notification
+  
     const currentUser = await User.findById(userId).select("username profilePic");
     
-    // Create acceptance notification for the sender
+  
     const acceptanceNotification = new Notification({
       recipient: senderId,
       sender: userId,
@@ -164,7 +161,7 @@ export const acceptFriendRequest = async (req, res) => {
     
     await acceptanceNotification.save();
     
-    // Notify the original sender via socket
+  
     const senderSocketId = getReceiverSocketId(senderId);
     if (senderSocketId) {
       io.to(senderSocketId).emit("friend-request-accepted", {
@@ -199,13 +196,12 @@ export const acceptFriendRequest = async (req, res) => {
   }
 };
 
-// Decline friend request from notification
 export const declineFriendRequest = async (req, res) => {
   try {
     const { notificationId } = req.params;
     const userId = req.user._id;
     
-    // Find the notification and ensure it's a friend request
+  
     const notification = await Notification.findOne({ 
       _id: notificationId, 
       recipient: userId,
@@ -216,7 +212,7 @@ export const declineFriendRequest = async (req, res) => {
       return res.status(404).json({ message: "Friend request notification not found" });
     }
     
-    // Delete the notification (declining silently)
+  
     await notification.deleteOne();
     
     res.status(200).json({ message: "Friend request declined" });

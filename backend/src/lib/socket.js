@@ -1,4 +1,4 @@
-// socket/socket.js
+
 import { Server } from "socket.io";
 import http from "http";
 import express from "express";
@@ -19,8 +19,8 @@ export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
-// used to store online users
-const userSocketMap = {}; // {userId: socketId}
+
+const userSocketMap = {}; 
 
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
@@ -28,36 +28,36 @@ io.on("connection", (socket) => {
 
   if (userId) {
     userSocketMap[userId] = socket.id;
-    socket.join(userId); // Join user's personal room
+    socket.join(userId); 
   }
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-  // Join all groups the user is a member of
+  
   socket.on("join-groups", (groupIds) => {
     groupIds.forEach((groupId) => socket.join(groupId));
   });
 
-  // Handle sending messages
+  
   socket.on(
     "send-message",
     async ({ to, message, isGroup, activeChatUserId }) => {
       try {
         if (isGroup) {
-          // Fetch group data
+          
           const group = await Group.findById(to).lean();
           if (!group) return;
 
           const sender = await User.findById(userId).select("username").lean();
 
-          // Emit message to all group members via socket room
+          
           io.to(to).emit("receive-message", {
             from: userId,
             message,
             isGroup: true,
           });
 
-          // Create and send notifications to each group member (except sender and activeChatUser)
+          
           await Promise.all(
             group.members
               .filter(
@@ -105,7 +105,7 @@ io.on("connection", (socket) => {
               })
           );
         } else {
-          // 1-to-1 message handling
+          
           io.to(to).emit("receive-message", {
             from: userId,
             message,
@@ -157,7 +157,7 @@ io.on("connection", (socket) => {
     }
   );
 
-  // Handle notification read status
+  
   socket.on("mark-notifications-read", async (notificationIds) => {
     try {
       await Notification.updateMany(

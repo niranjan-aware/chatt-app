@@ -1,24 +1,21 @@
-// App.jsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./store/useAuthStore";
 import { useModalStore } from "./store/useModalStore";
 import { useEffect } from "react";
+import { useThemeStore } from "./store/useThemeStore";
 
-// Pages
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 
-// Components
 import Navbar from "./components/Navbar";
 import SearchModal from "./components/SearchModal";
 import CreateGroupModal from "./components/CreateGroupModal";
 import QuickReplyModal from "./components/QuickReplyModal";
 
-// Loading component
 const LoadingScreen = () => (
   <div className="h-screen flex justify-center items-center bg-base-100">
     <div className="text-center">
@@ -28,7 +25,7 @@ const LoadingScreen = () => (
   </div>
 );
 
-// Auth guard components
+
 const ProtectedRoute = ({ children }) => {
   const { authUser, isCheckingAuth } = useAuthStore();
 
@@ -59,24 +56,24 @@ const RedirectIfAuthenticated = ({ children }) => {
 
 const App = () => {
   const { checkAuth, isCheckingAuth } = useAuthStore();
+  const { theme } = useThemeStore();
   const { 
     isSearchModalOpen, 
     isCreateGroupModalOpen,
     isMessageModalOpen
   } = useModalStore();
 
-  // Check authentication status on app load
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  // Show loading screen while checking authentication
+ 
   if (isCheckingAuth) {
     return <LoadingScreen />;
   }
-  
   return (
-    <div className="min-h-screen bg-base-100">
+    <div data-theme={theme}>
+    <div className="min-h-screen">
       <Navbar />
       <Routes>
         <Route
@@ -129,7 +126,6 @@ const App = () => {
         />
       </Routes>
 
-      {/* Global Modals */}
       {isSearchModalOpen && <SearchModal />}
       {isCreateGroupModalOpen && <CreateGroupModal />}
       {isMessageModalOpen && <QuickReplyModal />}
@@ -145,6 +141,7 @@ const App = () => {
           },
         }}
       />
+    </div>
     </div>
   );
 };
