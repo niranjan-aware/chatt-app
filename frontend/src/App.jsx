@@ -120,7 +120,7 @@ const App = () => {
           path="/signup"
           element={
             <RedirectIfAuthenticated>
-              <SignupPage />
+              <SignUpPage />
             </RedirectIfAuthenticated>
           }
         />

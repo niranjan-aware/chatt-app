@@ -4,7 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton";
 import { Users } from "lucide-react";
 
-const Sidebar = () => {
+const SideBar = () => {
   const { getUsers, friendsAndGroups, selectedUser, setSelectedUser, isfriendsAndGroupsLoading } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
@@ -55,7 +55,7 @@ const Sidebar = () => {
           >
             <div className="relative mx-auto lg:mx-0">
               <img
-                src={user.profilePic || "frontend/public/avatar.png"}
+                src={user.profilePic || "../../public/avatar.png"}
                 alt={user.name}
                 className="size-12 object-cover rounded-full"
               />
@@ -87,4 +87,4 @@ const Sidebar = () => {
     </aside>
   );
 };
-export default Sidebar;
+export default SideBar;

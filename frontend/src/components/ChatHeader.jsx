@@ -45,7 +45,7 @@ const ChatHeader = () => {
           {selectedUser.type === "user" && (
             <div className="rm-btn">
               <button
-                className="btn btn-sm btn-error mr-3 hidden md:inline-flex"
+                className="btn btn-sm btn-primary mr-3 hidden md:inline-flex"
                 onClick={() => handleRemoveFriend(selectedUser._id)}
               >
                 Remove Friend
