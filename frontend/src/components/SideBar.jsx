@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import SidebarSkeleton from "./skeletons/SidebarSkeleton";
+import SideBarSkeleton from "./skeletons/SideBarSkeleton";
 import { Users } from "lucide-react";
 
 const SideBar = () => {
@@ -19,7 +19,7 @@ const SideBar = () => {
     ? friendsAndGroups.filter((user) => onlineUsers.includes(user._id))
     : friendsAndGroups;
 
-  if (isfriendsAndGroupsLoading) return <SidebarSkeleton />;
+  if (isfriendsAndGroupsLoading) return <SideBarSkeleton />;
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
